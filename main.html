@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<title></title>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+<link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+<div id="content">
+
+  <div id="letters"> </div>
+  <div id="lettersSlot"> </div>
+
+  <div id="successMessage">
+    <h2>You did it!</h2>
+    <button onclick="init()">Play Again</button>
+    <img id= "shaker" src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/Bell_font_awesome.svg/512px-Bell_font_awesome.svg.png">
+  </div>
+
+
+</div>
+</div>
+
+
+
+
+
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.9/jquery-ui.min.js"></script>
+<script type="text/javascript" src="jquery.jrumble.1.3.js"></script>
+<script type="text/javascript" src="underscore.js"></script> 
+
+<script type="text/javascript">
+
+// Initialize jRumble on Selector
+$('#shaker').jrumble();
+// Start rumble on element
+$('#shaker').trigger('startRumble');
+// Stop rumble on element
+$('#shaker').trigger('stopRumble');
+
+
+function getRandomColor() {
+        var letters = '0123456789ABCDEF';
+        var color = '#';
+        for (var i = 0; i < 6; i++ ) {
+          color += letters[Math.floor(Math.random() * 16)];
+        }
+        return color;
+      }
+
+
+
+
+var billTimeout
+var audio = new Audio('bell.mp3');
+var correctCards;
+var word;
+var words= ['game', 'gard', 'hell', 'congrats', 'library', 'css', 'javascript', 'jQuery'];
+$( init );
+
+function init() {
+
+  // Reset the game
+  audio.pause();
+  correctCards = 0;
+  $('#letters').html( '' );
+  $('#lettersSlot').html( '' );
+
+  // Create the pile of shuffled cards
+  word = words[Math.floor(Math.random() * (words.length-1))].split("")
+  var UnorderWord = _.shuffle(word);
+  // Hide bell and the success message
+
+  billTimeout= setTimeout(bellRing ,10000);
+  $('#lettersSlot').css({'background': '#ddf'})
+  $('#successMessage').hide();
+  $('#successMessage').css( {
+    left: '580px',
+    top: '250px',
+    width: 0,
+    height: 0
+  } );
+
+  
+
+
+  for ( var i=0; i< UnorderWord.length; i++ ) {
+
+    $('<div>' + UnorderWord[i] + '</div>').css({'background-color': getRandomColor()}).data( 'letter', UnorderWord[i] ).attr( 'id', 'card'+ UnorderWord[i] ).appendTo( '#letters' ).draggable( {
+      containment: '#content',
+      stack: '#letters div',
+            revert: true,
+      cursor: 'move'
+    } );
+  }
+
+  // Create the card slots
+  for ( var i=1; i<=word.length; i++ ) {
+    $('<div></div>').data( 'letter', word[i-1]).appendTo( '#lettersSlot' ).droppable( {
+      accept: '#letters div',
+      hoverClass: 'hovered',
+      drop: handleCardDrop
+    } );
+  }
+
+}
+
+
+function bellRing(){
+  if(correctCards <  word.length){
+  clearTimeout(billTimeout);
+  audio.loop = true;
+  audio.play();
+ 
+  $('#shaker').show();
+  $('#successMessage').show();
+  $('h2').text('you lose');
+   $('#successMessage').animate( {
+      left: '380px',
+      top: '200px',
+      width: '400px',
+      height: '100px',
+      opacity: 1
+    } );
+  $('#shaker').trigger('startRumble');
+  $('#shaker').jrumble({
+  x: 0,
+  y: 0,
+  rotation: 5
+});
+}
+
+
+}
+
+function handleCardDrop( event, ui ) {
+  var slotNumber = $(this).data( 'letter' );
+  var cardNumber = ui.draggable.data( 'letter' );
+
+  // If the card was dropped to the correct slot,
+  // change the card colour, position it directly
+  // on top of the slot, and prevent it being dragged
+  // again
+  if ( slotNumber == cardNumber ) {
+    ui.draggable.css( {'background-color': 'LimeGreen'} );
+    ui.draggable.draggable( 'disable' );
+    $(this).droppable( 'disable' );
+    ui.draggable.position( { of: $(this), my: 'left top', at: 'left top' } );
+    ui.draggable.draggable( 'option', 'revert', false );
+    correctCards++;
+  } 
+  
+  // If all the cards have been placed correctly then display a message
+  // and reset the cards for another go
+
+  if ( correctCards ===  word.length) {
+    clearTimeout(billTimeout);
+    $('#lettersSlot').css({'background-color': 'Lime'});
+    $('h2').text('you did it!!');
+    $('#successMessage').show();
+    $('#shaker').hide();
+    $('#successMessage').animate( {
+      left: '380px',
+      top: '200px',
+      width: '400px',
+      height: '100px',
+      opacity: 1
+    } );
+  }
+
+}
+
+</script>
+
+</body>
+</html>
+
